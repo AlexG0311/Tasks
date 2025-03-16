@@ -9,9 +9,14 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "devDependencies": {
+    "standard": "^17.1.2"
+  },
   "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "express": "^4.21.2",
-    "mongodb": "^6.13.0"
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.13.0"
   }
 }

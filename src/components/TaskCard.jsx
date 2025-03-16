@@ -1,89 +1,63 @@
+import { useState } from "react";
 import PropTypes from "prop-types";
 
-export default function TaskCard({ task }) {
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case "Listo":
-        return "bg-green-500";
-      case "En Proceso":
-        return "bg-yellow-500";
-      case "Terminado":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
+const TaskCard = ({ title, date, status, responsible, width = "w-60", height = "h-auto" }) => {
+  const [isSelected, setIsSelected] = useState(false);
+
+  const handleClick = () => {
+    console.log("Clic detectado, isSelected:", !isSelected);
+    setIsSelected(!isSelected);
   };
 
   return (
-    <div className="bg-gray-100 p-4 rounded-lg shadow-md">
-      <div className="flex items-center justify-between">
-        <span className="text-gray-600">{task.title}</span>
-        <button>
-          <svg
-            className="w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        </button>
-      </div>
-      <div className="mt-2">
-        <div className="flex items-center">
-          <svg
-            className="w-5 h-5 text-gray-400 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
-          <span>{task.assignedTo}</span>
+    <div
+      onClick={handleClick}
+      className={`bg-gray-100 rounded-lg p-4 shadow-md transition-all duration-300 
+        ${width} ${height} 
+        hover:shadow-lg hover:bg-gray-200 hover:scale-105 hover:border hover:border-blue-300 
+        ${isSelected ? "bg-blue-200 border-2 border-blue-500" : ""}`}
+    >
+      <div className="space-y-3">
+        <div className="flex flex-col">
+          <label className="text-sm font-semibold text-gray-700">
+            Título de la tarea
+          </label>
+          <div className="mt-1 p-2 bg-gray-200 rounded-md text-gray-800">
+            {title || "Sin título"}
+          </div>
         </div>
-        <div className="mt-2">
-          <button className={`px-2 py-1 rounded-md text-white ${getStatusStyle(task.status)}`}>
-            {task.status}
-          </button>
+        <div className="flex flex-col">
+          <label className="text-sm font-semibold text-gray-700">Fecha</label>
+          <div className="mt-1 p-2 bg-gray-200 rounded-md text-gray-800">
+            {date || "Sin fecha"}
+          </div>
         </div>
-        <div className="mt-2 text-sm text-gray-500">
-          <svg
-            className="w-4 h-4 inline mr-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
-          </svg>
-          {task.dueDate}
+        <div className="flex flex-col">
+          <label className="text-sm font-semibold text-gray-700">Estado</label>
+          <div className="mt-1 p-2 bg-gray-200 rounded-md text-gray-800">
+            {status || "Sin estado"}
+          </div>
+        </div>
+        <div className="flex flex-col">
+          <label className="text-sm font-semibold text-gray-700">
+            Responsable
+          </label>
+          <div className="mt-1 p-2 bg-gray-200 rounded-md text-gray-800">
+            {responsible || "Sin responsable"}
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 TaskCard.propTypes = {
-  task: PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string,
-    dueDate: PropTypes.string,
-    status: PropTypes.string,
-    assignedTo: PropTypes.string,
-  }).isRequired,
+  title: PropTypes.string,
+  date: PropTypes.string,
+  status: PropTypes.string,
+  responsible: PropTypes.string,
+  width: PropTypes.string, // Nueva prop para el ancho
+  height: PropTypes.string, // Nueva prop para el alto
 };
+
+export default TaskCard;

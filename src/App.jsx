@@ -1,42 +1,73 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import MainArea from "./components/MainArea";
 import Modal from "./components/Modal";
- // Opcional: archivo CSS para estilos globales
+import RegisterForm from "./components/RegisterForm";
+import LoginForm from "./components/LoginForm";
 
 export function App() {
+  const [user, setUser] = useState(null);
+  const [isRegistering, setIsRegistering] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedWorkspace, setSelectedWorkspace] = useState("");
+  const [selectedWorkspace, setSelectedWorkspace] = useState(null);
   const [newBoard, setNewBoard] = useState("");
   const [workspaces, setWorkspaces] = useState([]);
   const [boards, setBoards] = useState({});
   const [selectedBoard, setSelectedBoard] = useState(null);
   const [newTask, setNewTask] = useState({
     title: "",
-    description: "",
+    description: "", // Añadimos descripción
     dueDate: "",
-    priority: "",
-    assignedTo: "",
-    status: "Listo",
+    priority: "Media", // Añadimos prioridad
+    status: "Pendiente", // Ajustamos el valor por defecto
+    assignedTo: "", // Ahora es un string (email)
   });
   const [viewMode, setViewMode] = useState("tabla");
 
-  const teamMembers = [
-    { id: 1, name: "Juan Pérez" },
-    { id: 2, name: "María Gómez" },
-    { id: 3, name: "Carlos López" },
-  ];
+  // Verificar si el usuario está autenticado y cargar los espacios de trabajo
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/protected", {
+          method: "GET",
+          credentials: "include",
+        });
 
-  const handleAddWorkspace = (newWorkspaceName) => {
-    if (newWorkspaceName.trim() && !workspaces.includes(newWorkspaceName)) {
-      setWorkspaces([...workspaces, newWorkspaceName]);
-      setIsDropdownOpen(false);
-    } else {
-      alert("Por favor, ingresa un nombre válido para el espacio de trabajo.");
-    }
-  };
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+
+          const workspacesResponse = await fetch(
+            "http://localhost:5000/api/workspaces",
+            {
+              method: "GET",
+              credentials: "include",
+            }
+          );
+
+          if (workspacesResponse.ok) {
+            const workspacesData = await workspacesResponse.json();
+            setWorkspaces(workspacesData.workspaces || []);
+          } else {
+            console.error(
+              "Error al obtener workspaces:",
+              await workspacesResponse.json()
+            );
+            setWorkspaces([]);
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Error al verificar autenticación:", err);
+        setUser(null);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   const handleSelectWorkspace = (workspace) => {
     setSelectedWorkspace(workspace);
@@ -47,8 +78,8 @@ export function App() {
     if (newBoard.trim() && selectedWorkspace) {
       setBoards((prevBoards) => ({
         ...prevBoards,
-        [selectedWorkspace]: [
-          ...(prevBoards[selectedWorkspace] || []),
+        [selectedWorkspace.id]: [
+          ...(prevBoards[selectedWorkspace.id] || []),
           { id: Date.now(), name: newBoard, tasks: [] },
         ],
       }));
@@ -56,6 +87,33 @@ export function App() {
       setIsModalOpen(false);
     } else {
       alert("Por favor, ingresa un nombre para el tablero.");
+    }
+  };
+
+  const handleRegisterSuccess = () => {
+    setIsRegistering(false);
+  };
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    setIsRegistering(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("http://localhost:5000/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      setUser(null);
+      setSelectedWorkspace(null);
+      setSelectedBoard(null);
+      setWorkspaces([]);
+      setBoards({});
+      setViewMode("tabla");
+      console.log("Sesión cerrada exitosamente.");
+    } catch (err) {
+      console.error("Error al cerrar sesión:", err);
     }
   };
 
@@ -70,21 +128,23 @@ export function App() {
   };
 
   const handleSaveTask = () => {
-    if (!newTask.title || !newTask.assignedTo || !selectedBoard) {
-      alert("Por favor, completa el título, asigna un responsable y selecciona un tablero.");
+    if (!newTask.title || !newTask.assignedTo) {
+      alert("Por favor, completa el título y asigna un responsable.");
       return;
     }
 
     setBoards((prevBoards) => {
       const updatedBoards = { ...prevBoards };
-      const workspaceBoards = updatedBoards[selectedWorkspace] || [];
-      const boardIndex = workspaceBoards.findIndex((b) => b.id === selectedBoard);
+      const workspaceBoards = updatedBoards[selectedWorkspace.id] || [];
+      const boardIndex = workspaceBoards.findIndex(
+        (b) => b.id === selectedBoard
+      );
       if (boardIndex !== -1) {
         workspaceBoards[boardIndex].tasks.push({
           id: Date.now(),
           ...newTask,
         });
-        updatedBoards[selectedWorkspace] = workspaceBoards;
+        updatedBoards[selectedWorkspace.id] = workspaceBoards;
       }
       return updatedBoards;
     });
@@ -93,47 +153,65 @@ export function App() {
       title: "",
       description: "",
       dueDate: "",
-      priority: "",
+      priority: "Media",
+      status: "Pendiente",
       assignedTo: "",
-      status: "Listo",
     });
     setIsModalOpen(false);
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex font-sans">
-      <Header />
-      <Sidebar
-        isDropdownOpen={isDropdownOpen}
-        setIsDropdownOpen={setIsDropdownOpen}
-        selectedWorkspace={selectedWorkspace}
-        handleSelectWorkspace={handleSelectWorkspace}
-        setIsModalOpen={setIsModalOpen}
-        workspaces={workspaces}
-        handleAddWorkspace={handleAddWorkspace}
-      />
-      <MainArea
-        selectedWorkspace={selectedWorkspace}
-        boards={boards}
-        selectedBoard={selectedBoard}
-        handleSelectBoard={handleSelectBoard}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        setIsModalOpen={setIsModalOpen}
-      />
-      <Modal
-        isOpen={isModalOpen}
-        setIsOpen={setIsModalOpen}
-        newBoard={newBoard}
-        setNewBoard={setNewBoard}
-        handleAddBoard={handleAddBoard}
-        selectedBoard={selectedBoard}
-        newTask={newTask}
-        handleChangeTask={handleChangeTask}
-        handleSaveTask={handleSaveTask}
-        teamMembers={teamMembers}
-      />
+      {user ? (
+        <>
+          <Header handleLogout={handleLogout} />
+          <Sidebar
+            isDropdownOpen={isDropdownOpen}
+            setIsDropdownOpen={setIsDropdownOpen}
+            selectedWorkspace={selectedWorkspace}
+            handleSelectWorkspace={handleSelectWorkspace}
+            setIsModalOpen={setIsModalOpen}
+            workspaces={workspaces}
+            setWorkspaces={setWorkspaces}
+          />
+          <MainArea
+            selectedWorkspace={
+              selectedWorkspace ? selectedWorkspace.name : null
+            }
+            boards={boards}
+            selectedBoard={selectedBoard}
+            handleSelectBoard={handleSelectBoard}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            setIsModalOpen={setIsModalOpen}
+          />
+          <Modal
+            isOpen={isModalOpen}
+            setIsOpen={setIsModalOpen}
+            newBoard={newBoard}
+            setNewBoard={setNewBoard}
+            handleAddBoard={handleAddBoard}
+            selectedBoard={selectedBoard}
+            newTask={newTask}
+            handleChangeTask={handleChangeTask}
+            handleSaveTask={handleSaveTask}
+          />
+        </>
+      ) : (
+        <div className="flex-1 p-6 flex items-center justify-center bg-gray-50">
+          {isRegistering ? (
+            <RegisterForm
+              onRegisterSuccess={handleRegisterSuccess}
+              onToggleRegister={setIsRegistering}
+            />
+          ) : (
+            <LoginForm
+              onLoginSuccess={handleLoginSuccess}
+              onToggleRegister={setIsRegistering}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
-
