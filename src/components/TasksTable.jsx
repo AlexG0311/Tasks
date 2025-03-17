@@ -1,4 +1,7 @@
 import PropTypes from "prop-types";
+import SeleccionarEstado from "./SeleccionarEstado";
+import BuscarMiembros from "./BuscarMiembros";
+
 
 const TasksTable = ({ tasks }) => {
   return (

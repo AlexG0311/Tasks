@@ -93,7 +93,7 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
       alert("El ID del espacio de trabajo no es válido.");
       return;
     }
-  
+
     try {
       const response = await fetch(`http://localhost:5000/api/workspaces/${workspaceId}/tasks`, {
         method: "POST",
@@ -110,14 +110,26 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
           assignedTo: newTask.assignedTo,
         }),
       });
-  
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || "Error al guardar la tarea");
       }
-  
-      setTasks((prevTasks) => [...prevTasks, data.task]);
-  
+
+      // Recargar las tareas desde el servidor
+      const tasksResponse = await fetch(`http://localhost:5000/api/workspaces/${workspaceId}/tasks`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (tasksResponse.ok) {
+        const tasksData = await tasksResponse.json();
+        setTasks(tasksData.tasks);
+      } else {
+        console.error("Error al recargar tareas:", await tasksResponse.json());
+        setTasks([]);
+      }
+
       setNewTask({
         title: "",
         description: "",

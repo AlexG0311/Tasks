@@ -8,19 +8,17 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const port = 5000;
 
-// Clave secreta para JWT (en producción, usa un .env)
 const JWT_SECRET = "1234";
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173", // Ajusta a "http://localhost:5178" si es necesario
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
 
-// Conexión a MySQL
 const db = mysql.createPool({
   host: "localhost",
   user: "root",
@@ -41,7 +39,6 @@ async function testConnection() {
 
 testConnection();
 
-// Endpoint de prueba
 app.get("/api/test", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT 1 as test");
@@ -51,7 +48,6 @@ app.get("/api/test", async (req, res) => {
   }
 });
 
-// Middleware para verificar JWT desde la cookie
 const authenticateToken = (req, res, next) => {
   const token = req.cookies.token;
 
@@ -64,7 +60,6 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Registrar un usuario
 app.post("/api/register", async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 
@@ -89,7 +84,6 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// Iniciar sesión
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -124,18 +118,15 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// Cerrar sesión
 app.post("/api/logout", (req, res) => {
   res.clearCookie("token");
   res.json({ message: "Sesión cerrada exitosamente." });
 });
 
-// Ruta protegida de ejemplo
 app.get("/api/protected", authenticateToken, (req, res) => {
   res.json({ message: "Acceso permitido", user: req.user });
 });
-
-// Agregar un espacio de trabajo (POST)
+// Endpoint para agregar un espacio de trabajo
 app.post("/api/workspaces", authenticateToken, async (req, res) => {
   const { name } = req.body;
   const createdBy = req.user.id;
@@ -163,8 +154,7 @@ app.post("/api/workspaces", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Error al crear el espacio de trabajo." });
   }
 });
-
-// Obtener espacios de trabajo (GET)
+// Endpoint para obtener los espacio de trabajo
 app.get("/api/workspaces", authenticateToken, async (req, res) => {
   const userId = req.user.id;
 
@@ -183,14 +173,12 @@ app.get("/api/workspaces", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Error al obtener los espacios de trabajo." });
   }
 });
-
-// Agregar una tarea en un espacio de trabajo (POST)
+// Endpoint para agregar una tarea.
 app.post("/api/workspaces/:workspaceId/tasks", authenticateToken, async (req, res) => {
   const workspaceId = req.params.workspaceId;
   const userId = req.user.id;
   const { title, description, dueDate, priority, status, assignedTo } = req.body;
 
-  // Validar datos requeridos
   if (!title || !title.trim()) {
     return res.status(400).json({ error: "El título de la tarea es obligatorio." });
   }
@@ -199,7 +187,6 @@ app.post("/api/workspaces/:workspaceId/tasks", authenticateToken, async (req, re
   }
 
   try {
-    // Verificar que el workspace pertenezca al usuario
     const [workspace] = await db.query(
       "SELECT id FROM workspaces WHERE id = ? AND created_by = ?",
       [workspaceId, userId]
@@ -209,7 +196,6 @@ app.post("/api/workspaces/:workspaceId/tasks", authenticateToken, async (req, re
       return res.status(404).json({ error: "Espacio de trabajo no encontrado o no tienes permisos." });
     }
 
-    // Normalizar los valores de prioridad y estado para que coincidan con el ENUM
     const validPriority = ["baja", "media", "alta"].includes(priority?.toLowerCase())
       ? priority.toLowerCase()
       : "media";
@@ -217,7 +203,6 @@ app.post("/api/workspaces/:workspaceId/tasks", authenticateToken, async (req, re
       ? status.toLowerCase()
       : "pendiente";
 
-    // Buscar el ID del usuario por su email
     const [assignedUser] = await db.query(
       "SELECT id FROM users WHERE email = ?",
       [assignedTo.trim()]
@@ -229,7 +214,6 @@ app.post("/api/workspaces/:workspaceId/tasks", authenticateToken, async (req, re
 
     const assignedUserId = assignedUser[0].id;
 
-    // Crear la tarea con la asignación
     const [result] = await db.query(
       `INSERT INTO Tareas (id_espacio, titulo, descripcion, fecha_vencimiento, prioridad, estado, id_usuario_creador, assigned_to) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -247,7 +231,6 @@ app.post("/api/workspaces/:workspaceId/tasks", authenticateToken, async (req, re
 
     const taskId = result.insertId;
 
-    // Crear objeto de respuesta con el formato esperado por el frontend
     const newTask = {
       id: taskId,
       title: title.trim(),
@@ -267,6 +250,58 @@ app.post("/api/workspaces/:workspaceId/tasks", authenticateToken, async (req, re
   } catch (err) {
     console.error("Error al crear la tarea:", err);
     res.status(500).json({ error: "Error al crear la tarea." });
+  }
+});
+
+// Endpoint GET para obtener tarea.
+app.get("/api/workspaces/:workspaceId/tasks", authenticateToken, async (req, res) => {
+  const workspaceId = req.params.workspaceId;
+  const userId = req.user.id;
+
+  console.log("Procesando solicitud GET para workspaceId:", workspaceId, "userId:", userId);
+
+  try {
+    console.log("Verificando workspace...");
+    const [workspace] = await db.query(
+      "SELECT id FROM workspaces WHERE id = ? AND created_by = ?",
+      [workspaceId, userId]
+    );
+
+    if (workspace.length === 0) {
+      console.log("Workspace no encontrado o sin permisos para userId:", userId);
+      return res.status(404).json({ error: "Espacio de trabajo no encontrado o no tienes permisos." });
+    }
+
+    console.log("Workspace encontrado, obteniendo tareas...");
+    const [tasks] = await db.query(
+      `SELECT id_tarea AS id, id_espacio AS workspaceId, titulo AS title, descripcion AS description, 
+       fecha_vencimiento AS dueDate, prioridad AS priority, estado AS status, fecha_creacion AS createdAt, assigned_to AS assignedTo 
+       FROM Tareas WHERE id_espacio = ?`,
+      [workspaceId]
+    );
+
+    console.log("Tareas obtenidas:", tasks);
+
+    const formattedTasks = tasks.map((task) => ({
+      id: task.id,
+      title: task.title || "",
+      description: task.description || "",
+      dueDate: task.dueDate ? task.dueDate.toISOString().split("T")[0] : null, // Formatear fecha sin la hora
+      priority: task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1).toLowerCase() : "Media",
+      status: task.status ? task.status.charAt(0).toUpperCase() + task.status.slice(1).toLowerCase() : "Pendiente",
+      workspaceId: parseInt(task.workspaceId),
+      createdAt: task.createdAt ? task.createdAt.toISOString() : new Date().toISOString(),
+      assignedTo: task.assignedTo || null,
+    }));
+
+    console.log("Tareas formateadas:", formattedTasks);
+    res.json({
+      message: "Tareas obtenidas exitosamente.",
+      tasks: formattedTasks,
+    });
+  } catch (err) {
+    console.error("Error al obtener las tareas:", err.message, err.stack);
+    res.status(500).json({ error: "Error al obtener las tareas.", details: err.message });
   }
 });
 
