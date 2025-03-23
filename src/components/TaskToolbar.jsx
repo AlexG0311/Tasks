@@ -1,8 +1,53 @@
 import PropTypes from "prop-types";
+import { useState } from "react";
 
-const TaskToolbar = ({ setIsModalOpen }) => {
+const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssign }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [emailInput, setEmailInput] = useState(""); // Estado para el correo ingresado
+
   const handleAddTask = () => {
     setIsModalOpen(true); // Abrir el modal al hacer clic en "Agregar tarea"
+  };
+
+  const handleDelete = () => {
+    if (selectedTaskIds.length > 0 && onDelete) {
+      onDelete(selectedTaskIds);
+    } else {
+      alert("Selecciona al menos una tarea para eliminar.");
+    }
+  };
+
+  const handleEdit = () => {
+    if (selectedTaskIds.length === 1 && onEdit) {
+      onEdit(selectedTaskIds[0]); // Pasamos el ID de la tarea seleccionada para editar
+    } else if (selectedTaskIds.length > 1) {
+      alert("Solo puedes editar una tarea a la vez.");
+    } else {
+      alert("Selecciona una tarea para editar.");
+    }
+  };
+
+  const handleEmailChange = (e) => {
+    setEmailInput(e.target.value); // Actualizar el estado del correo
+  };
+
+  const handleAssign = () => {
+    if (!emailInput || !emailInput.trim()) {
+      alert("Por favor, ingresa un correo válido.");
+      return;
+    }
+    if (selectedTaskIds.length > 0 && onAssign) {
+      selectedTaskIds.forEach((taskId) => {
+        onAssign(taskId, emailInput); // Llamar a onAssign para cada tarea seleccionada
+      });
+      setIsDropdownOpen(false); // Cerrar el dropdown
+      setEmailInput(""); // Limpiar el input
+    }
+  };
+
+  const handleCancel = () => {
+    setIsDropdownOpen(false); // Cerrar el dropdown
+    setEmailInput(""); // Limpiar el input
   };
 
   return (
@@ -39,20 +84,80 @@ const TaskToolbar = ({ setIsModalOpen }) => {
       </div>
 
       {/* Botón "Filtrar" */}
-      <button
-        className="text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
-      >
+      <button className="text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
         Filtrar
       </button>
+
+      {/* Botón "Editar" */}
+      <button
+        onClick={handleEdit}
+        className="text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+        disabled={selectedTaskIds.length !== 1}
+      >
+        Editar
+      </button>
+
+      {/* Botón "Eliminar" */}
+      <button
+        onClick={handleDelete}
+        className="text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+        disabled={selectedTaskIds.length === 0}
+      >
+        Eliminar
+      </button>
+
+      {/* Botón "Asignar responsable" */}
+      <div className="relative">
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+          disabled={selectedTaskIds.length === 0}
+        >
+          Asignar Responsable
+        </button>
+
+        {/* Dropdown para ingresar el correo */}
+        {isDropdownOpen && (
+          <div className="absolute right-0 mt-2 w-80 bg-black rounded-md shadow-lg p-4 z-10">
+            <label htmlFor="emailInput" className="text-sm ml-2 text-white">
+              Escribe el correo del responsable
+            </label>
+            <input
+              type="email"
+              id="emailInput"
+              value={emailInput}
+              onChange={handleEmailChange}
+              className="ml-2 mt-1 border-b-2 text-white border-gray-300 focus:outline-none focus:border-purple-600 transition duration-200 p-2 w-60"
+              placeholder="Correo del responsable"
+            />
+            <div className="flex justify-end space-x-2 mt-3">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="text-white hover:bg-purple-700 transition-colors mt-1 border p-1 rounded-md"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAssign}
+                className="text-white hover:bg-purple-800 transition-colors mt-1 border p-1 rounded-md"
+              >
+                Asignar Responsable
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
 TaskToolbar.propTypes = {
-  setIsModalOpen: PropTypes.func.isRequired, // Añadimos la prop para abrir el modal
-  onAddTask: PropTypes.func,
-  onSearch: PropTypes.func,
-  onFilter: PropTypes.func,
+  setIsModalOpen: PropTypes.func.isRequired,
+  selectedTaskIds: PropTypes.arrayOf(PropTypes.number).isRequired,
+  onDelete: PropTypes.func,
+  onEdit: PropTypes.func,
+  onAssign: PropTypes.func, // Nueva prop para manejar la asignación
 };
 
-export default TaskToolbar; 
+export default TaskToolbar;

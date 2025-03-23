@@ -18,15 +18,14 @@ export function App() {
   const [selectedBoard, setSelectedBoard] = useState(null);
   const [newTask, setNewTask] = useState({
     title: "",
-    description: "", // Añadimos descripción
+    description: "",
     dueDate: "",
-    priority: "Media", // Añadimos prioridad
-    status: "Pendiente", // Ajustamos el valor por defecto
-    assignedTo: "", // Ahora es un string (email)
+    priority: "Media",
+    status: "Pendiente",
+    assignedTo: "",
   });
   const [viewMode, setViewMode] = useState("tabla");
 
-  // Verificar si el usuario está autenticado y cargar los espacios de trabajo
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -50,6 +49,9 @@ export function App() {
           if (workspacesResponse.ok) {
             const workspacesData = await workspacesResponse.json();
             setWorkspaces(workspacesData.workspaces || []);
+            if (workspacesData.workspaces.length > 0 && !selectedWorkspace) {
+              setSelectedWorkspace(workspacesData.workspaces[0]); // Selecciona el primer workspace al inicio
+            }
           } else {
             console.error(
               "Error al obtener workspaces:",
@@ -70,6 +72,7 @@ export function App() {
   }, []);
 
   const handleSelectWorkspace = (workspace) => {
+    console.log("Seleccionando workspace:", workspace); // Depuración
     setSelectedWorkspace(workspace);
     setIsDropdownOpen(false);
   };
@@ -175,9 +178,7 @@ export function App() {
             setWorkspaces={setWorkspaces}
           />
           <MainArea
-            selectedWorkspace={
-              selectedWorkspace ? selectedWorkspace.name : null
-            }
+            selectedWorkspace={selectedWorkspace} // Pasar el objeto completo
             boards={boards}
             selectedBoard={selectedBoard}
             handleSelectBoard={handleSelectBoard}

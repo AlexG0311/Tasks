@@ -51,7 +51,7 @@ export default function Sidebar({
       alert(err.message);
     }
   };
-
+  
   return (
     <aside className="w-75 bg-white mt-20 rounded-sm shadow-md p-4 h-[calc(100vh-4rem)]">
       <div className="space-y-4">

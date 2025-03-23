@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
-import BoardList from "./BoardList";
-import TaskCard from "./TaskCard";
 import PropTypes from "prop-types";
 import Tabs from "./Tabs";
-import TaskTable from "./TasksTable";
 import PanelWorkSpace from "./PanelWorkSpace";
 
 export default function MainArea({
@@ -28,11 +25,6 @@ export default function MainArea({
         if (response.ok) {
           const data = await response.json();
           setWorkspaces(data.workspaces);
-          if (!selectedWorkspace || !selectedWorkspace.id) {
-            if (data.workspaces.length > 0) {
-              handleSelectBoard(data.workspaces[0].id);
-            }
-          }
         } else {
           console.error("Error al obtener workspaces:", await response.json());
         }
@@ -44,18 +36,13 @@ export default function MainArea({
     };
 
     fetchWorkspaces();
-  }, [selectedWorkspace, handleSelectBoard]);
+  }, []);
 
   if (loading || (!selectedWorkspace && workspaces.length === 0)) {
     return <PanelWorkSpace />;
   }
 
-  const effectiveWorkspace =
-    selectedWorkspace && selectedWorkspace.id
-      ? selectedWorkspace
-      : workspaces.length > 0
-      ? workspaces[0]
-      : null;
+  const effectiveWorkspace = selectedWorkspace || (workspaces.length > 0 ? workspaces[0] : null);
 
   if (!effectiveWorkspace) {
     return <PanelWorkSpace />;

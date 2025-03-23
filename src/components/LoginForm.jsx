@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-
+import './style.css'
 const LoginForm = ({ onLoginSuccess, onToggleRegister }) => {
   const [formData, setFormData] = useState({
     email: "",
@@ -55,26 +55,27 @@ const LoginForm = ({ onLoginSuccess, onToggleRegister }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Iniciar Sesión</h2>
+
+    <div className="max-w-md mx-auto p-6 bg-black rounded-lg shadow-xl">
+      <h2 className="text-2xl font-bold mb-4 text-white">Iniciar Sesión</h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       {success && <p className="text-green-500 mb-4">{success}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            email
+          <label className="block text-sm font-medium text-white">
+            Email
           </label>
           <input
             type="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="mt-1 p-2 w-full border text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
             placeholder="Ingresa tu email"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-white text-regal-blue">
             Contraseña
           </label>
           <input
@@ -82,7 +83,7 @@ const LoginForm = ({ onLoginSuccess, onToggleRegister }) => {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="mt-1 p-2 w-full border text-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
             placeholder="Ingresa tu contraseña"
           />
         </div>
@@ -102,6 +103,7 @@ const LoginForm = ({ onLoginSuccess, onToggleRegister }) => {
         </div>
       </form>
     </div>
+    
   );
 };
 

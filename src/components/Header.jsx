@@ -6,7 +6,9 @@ export default function Header({ handleLogout }) {
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white shadow-sm flex items-center justify-between px-6 z-10">
-      <h1 className="text-2xl font-bold text-purple-600 cursor-pointer">Devs</h1>
+      <h1 className="text-2xl font-bold text-purple-600 cursor-pointer">
+        Devs
+      </h1>
 
       <div className="flex items-center space-x-4 relative">
         <button className="cursor-pointer">
@@ -28,12 +30,19 @@ export default function Header({ handleLogout }) {
         ></animated-icons>
 
         <button>
-          <img className="h-5 w-5" src="/src/assets/barra-de-puntos.png" alt="Barra de puntos" />
+          <img
+            className="h-5 w-5"
+            src="/src/assets/barra-de-puntos.png"
+            alt="Barra de puntos"
+          />
         </button>
 
         {/* Icono de usuario con dropdown */}
         <div className="relative">
-          <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="cursor-pointer">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="cursor-pointer"
+          >
             <animated-icons
               src="https://animatedicons.co/get-icon?name=user%20profile&style=minimalistic&token=9b327b61-1433-451f-a476-148402217e82"
               trigger="hover"

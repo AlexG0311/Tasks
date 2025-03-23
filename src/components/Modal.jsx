@@ -68,34 +68,7 @@ const Modal = ({
             </select>
           </div>
 
-          {/* Estado */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Estado</label>
-            <select
-              name="status"
-              value={newTask.status}
-              onChange={handleChangeTask}
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="Pendiente">Pendiente</option>
-              <option value="En Progreso">En Progreso</option>
-              <option value="Completada">Completada</option>
-            </select>
-          </div>
-
-          {/* Responsable (Asignado a) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Responsable</label>
-            <input
-              type="email"
-              name="assignedTo"
-              value={newTask.assignedTo || ""}
-              onChange={handleChangeTask}
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Ingresa el email del responsable"
-              required
-            />
-          </div>
+          
 
           {/* Botones */}
           <div className="flex justify-end space-x-2 mt-4">
@@ -128,8 +101,7 @@ Modal.propTypes = {
     description: PropTypes.string,
     dueDate: PropTypes.string,
     priority: PropTypes.string,
-    status: PropTypes.string,
-    assignedTo: PropTypes.string, // Añadido para el email del responsable
+ 
   }),
   handleChangeTask: PropTypes.func,
   handleSaveTask: PropTypes.func,
