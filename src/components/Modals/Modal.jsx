@@ -68,8 +68,6 @@ const Modal = ({
             </select>
           </div>
 
-          
-
           {/* Botones */}
           <div className="flex justify-end space-x-2 mt-4">
             <button

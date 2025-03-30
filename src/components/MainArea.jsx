@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import Tabs from "./Tabs";
 import PanelWorkSpace from "./PanelWorkSpace";
@@ -12,51 +11,19 @@ export default function MainArea({
   setViewMode,
   setIsModalOpen,
 }) {
-  const [workspaces, setWorkspaces] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchWorkspaces = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/workspaces", {
-          method: "GET",
-          credentials: "include",
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setWorkspaces(data.workspaces);
-        } else {
-          console.error("Error al obtener workspaces:", await response.json());
-        }
-      } catch (err) {
-        console.error("Error al obtener workspaces:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWorkspaces();
-  }, []);
-
-  if (loading || (!selectedWorkspace && workspaces.length === 0)) {
+  // Si no hay un selectedWorkspace, mostrar PanelWorkSpace
+  if (!selectedWorkspace) {
     return <PanelWorkSpace />;
   }
 
-  const effectiveWorkspace = selectedWorkspace || (workspaces.length > 0 ? workspaces[0] : null);
-
-  if (!effectiveWorkspace) {
-    return <PanelWorkSpace />;
-  }
-
-  console.log("effectiveWorkspace:", effectiveWorkspace);
-
+  // Si hay un selectedWorkspace, renderizar el contenido con Tabs
   return (
     <main className="flex-1 p-6">
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-800">{effectiveWorkspace.name}</h2>
+        <h2 className="text-xl font-bold text-gray-800">{selectedWorkspace.name}</h2>
         <div className="flex space-x-2 mb-4">
           <div className="w-282 bg-white mt-3 rounded-sm shadow-md p-4 h-[calc(100vh-4rem)]">
-            <Tabs workspaceId={effectiveWorkspace.id} />
+            <Tabs workspaceId={selectedWorkspace.id} />
           </div>
         </div>
       </div>

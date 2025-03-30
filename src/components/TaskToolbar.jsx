@@ -1,12 +1,13 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
 
-const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssign }) => {
+const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssign, onSearch }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [emailInput, setEmailInput] = useState(""); // Estado para el correo ingresado
+  const [emailInput, setEmailInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // Estado para el término de búsqueda
 
   const handleAddTask = () => {
-    setIsModalOpen(true); // Abrir el modal al hacer clic en "Agregar tarea"
+    setIsModalOpen(true);
   };
 
   const handleDelete = () => {
@@ -19,7 +20,7 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
 
   const handleEdit = () => {
     if (selectedTaskIds.length === 1 && onEdit) {
-      onEdit(selectedTaskIds[0]); // Pasamos el ID de la tarea seleccionada para editar
+      onEdit(selectedTaskIds[0]);
     } else if (selectedTaskIds.length > 1) {
       alert("Solo puedes editar una tarea a la vez.");
     } else {
@@ -28,7 +29,15 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
   };
 
   const handleEmailChange = (e) => {
-    setEmailInput(e.target.value); // Actualizar el estado del correo
+    setEmailInput(e.target.value);
+  };
+
+  const handleSearchChange = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    if (onSearch) {
+      onSearch(term); // Notificar al componente padre del cambio en el término de búsqueda
+    }
   };
 
   const handleAssign = () => {
@@ -38,16 +47,16 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
     }
     if (selectedTaskIds.length > 0 && onAssign) {
       selectedTaskIds.forEach((taskId) => {
-        onAssign(taskId, emailInput); // Llamar a onAssign para cada tarea seleccionada
+        onAssign(taskId, emailInput);
       });
-      setIsDropdownOpen(false); // Cerrar el dropdown
-      setEmailInput(""); // Limpiar el input
+      setIsDropdownOpen(false);
+      setEmailInput("");
     }
   };
 
   const handleCancel = () => {
-    setIsDropdownOpen(false); // Cerrar el dropdown
-    setEmailInput(""); // Limpiar el input
+    setIsDropdownOpen(false);
+    setEmailInput("");
   };
 
   return (
@@ -65,6 +74,8 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
         <input
           type="text"
           placeholder="Buscar"
+          value={searchTerm}
+          onChange={handleSearchChange}
           className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
         <svg
@@ -83,11 +94,6 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
         </svg>
       </div>
 
-      {/* Botón "Filtrar" */}
-      <button className="text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
-        Filtrar
-      </button>
-
       {/* Botón "Editar" */}
       <button
         onClick={handleEdit}
@@ -105,7 +111,7 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
       >
         Eliminar
       </button>
-
+    
       {/* Botón "Asignar responsable" */}
       <div className="relative">
         <button
@@ -157,7 +163,8 @@ TaskToolbar.propTypes = {
   selectedTaskIds: PropTypes.arrayOf(PropTypes.number).isRequired,
   onDelete: PropTypes.func,
   onEdit: PropTypes.func,
-  onAssign: PropTypes.func, // Nueva prop para manejar la asignación
+  onAssign: PropTypes.func,
+  onSearch: PropTypes.func, // Nueva prop para manejar la búsqueda
 };
 
 export default TaskToolbar;

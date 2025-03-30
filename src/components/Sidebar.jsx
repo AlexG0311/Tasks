@@ -9,7 +9,7 @@ export default function Sidebar({
   handleSelectWorkspace,
   setIsModalOpen,
   workspaces,
-  setWorkspaces, // Añadimos setWorkspaces para actualizar la lista
+  setWorkspaces,
 }) {
   const [isAddingWorkspace, setIsAddingWorkspace] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
@@ -21,13 +21,12 @@ export default function Sidebar({
     }
 
     try {
-      // Hacer solicitud al backend para crear el espacio de trabajo
       const response = await fetch("http://localhost:5000/api/workspaces", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // Enviar cookies para autenticación
+        credentials: "include",
         body: JSON.stringify({ name: newWorkspaceName }),
       });
 
@@ -37,13 +36,11 @@ export default function Sidebar({
         throw new Error(data.error || "Error al crear el espacio de trabajo.");
       }
 
-      // Agregar el nuevo espacio de trabajo a la lista local
       setWorkspaces((prevWorkspaces) => [
         ...prevWorkspaces,
         { id: data.workspace.id, name: data.workspace.name },
       ]);
 
-      // Limpiar el formulario y cerrar el input
       setNewWorkspaceName("");
       setIsAddingWorkspace(false);
     } catch (err) {
@@ -51,11 +48,19 @@ export default function Sidebar({
       alert(err.message);
     }
   };
-  
+
+  // Función para manejar el clic en el botón "Home"
+  const handleHomeClick = () => {
+    handleSelectWorkspace(null); // Deseleccionar el espacio de trabajo actual
+  };
+
   return (
     <aside className="w-75 bg-white mt-20 rounded-sm shadow-md p-4 h-[calc(100vh-4rem)]">
       <div className="space-y-4">
-        <button className="w-full bg-purple-500 text-white font-semibold py-2 rounded-lg hover:bg-purple-700 transition-colors cursor-pointer">
+        <button
+          onClick={handleHomeClick} // Añadimos el manejador de clic
+          className="w-full bg-purple-600 text-white font-semibold py-2 rounded-lg hover:bg-purple-700 transition-colors cursor-pointer"
+        >
           Home
         </button>
 
@@ -101,7 +106,7 @@ export default function Sidebar({
               <div className="absolute w-full bg-white border rounded-md shadow-lg mt-1 z-10">
                 {workspaces.map((workspace) => (
                   <button
-                    key={workspace.id} // Usamos el ID del workspace como clave
+                    key={workspace.id}
                     onClick={() => handleSelectWorkspace(workspace)}
                     className="w-full px-4 py-2 text-gray-700 hover:bg-gray-100 text-left"
                   >
@@ -146,7 +151,6 @@ export default function Sidebar({
             )}
           </div>
           <button
-           
             className="w-9 h-9 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center justify-center"
           >
             <span className="text-xl">+</span>
@@ -169,5 +173,5 @@ Sidebar.propTypes = {
       name: PropTypes.string,
     })
   ).isRequired,
-  setWorkspaces: PropTypes.func.isRequired, // Añadimos setWorkspaces a PropTypes
+  setWorkspaces: PropTypes.func.isRequired,
 };

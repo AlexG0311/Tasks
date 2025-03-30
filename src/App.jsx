@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import MainArea from "./components/MainArea";
-import Modal from "./components/Modal";
-import RegisterForm from "./components/RegisterForm";
-import LoginForm from "./components/LoginForm";
+import Modal from "./components/Modals/Modal";
+import RegisterForm from "./components/Auth/RegisterForm";
+import LoginForm from "./components/Auth/LoginForm";
 
 export function App() {
   const [user, setUser] = useState(null);
@@ -48,9 +48,18 @@ export function App() {
 
           if (workspacesResponse.ok) {
             const workspacesData = await workspacesResponse.json();
-            setWorkspaces(workspacesData.workspaces || []);
-            if (workspacesData.workspaces.length > 0 && !selectedWorkspace) {
-              setSelectedWorkspace(workspacesData.workspaces[0]); // Selecciona el primer workspace al inicio
+            const loadedWorkspaces = workspacesData.workspaces || [];
+            setWorkspaces(loadedWorkspaces);
+
+            // Intentar restaurar el workspace seleccionado desde localStorage
+            const savedWorkspaceId = localStorage.getItem("selectedWorkspaceId");
+            if (savedWorkspaceId) {
+              const savedWorkspace = loadedWorkspaces.find(
+                (ws) => ws.id === parseInt(savedWorkspaceId)
+              );
+              if (savedWorkspace) {
+                setSelectedWorkspace(savedWorkspace);
+              }
             }
           } else {
             console.error(
@@ -72,9 +81,11 @@ export function App() {
   }, []);
 
   const handleSelectWorkspace = (workspace) => {
-    console.log("Seleccionando workspace:", workspace); // Depuración
+    console.log("Seleccionando workspace:", workspace);
     setSelectedWorkspace(workspace);
     setIsDropdownOpen(false);
+    // Guardar el ID del workspace seleccionado en localStorage
+    localStorage.setItem("selectedWorkspaceId", workspace.id);
   };
 
   const handleAddBoard = () => {
@@ -114,6 +125,8 @@ export function App() {
       setWorkspaces([]);
       setBoards({});
       setViewMode("tabla");
+      // Limpiar el workspace seleccionado de localStorage al cerrar sesión
+      localStorage.removeItem("selectedWorkspaceId");
       console.log("Sesión cerrada exitosamente.");
     } catch (err) {
       console.error("Error al cerrar sesión:", err);
@@ -178,7 +191,7 @@ export function App() {
             setWorkspaces={setWorkspaces}
           />
           <MainArea
-            selectedWorkspace={selectedWorkspace} // Pasar el objeto completo
+            selectedWorkspace={selectedWorkspace}
             boards={boards}
             selectedBoard={selectedBoard}
             handleSelectBoard={handleSelectBoard}
@@ -199,7 +212,7 @@ export function App() {
           />
         </>
       ) : (
-        <div className="flex-1 p-6 flex items-center justify-center bg-gray-50">
+        <div className="flex-1 p-0 flex items-center justify-center bg-gray-50">
           {isRegistering ? (
             <RegisterForm
               onRegisterSuccess={handleRegisterSuccess}

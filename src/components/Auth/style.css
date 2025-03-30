@@ -1,0 +1,18 @@
+/* style.css */
+.animated-purple-gradient {
+    background: linear-gradient(45deg, #000000, #160a2a, #816597, #4c1d95);
+    background-size: 400% 400%;
+    animation: purpleGradientAnimation 15s ease infinite;
+  }
+  
+  @keyframes purpleGradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }

@@ -3,8 +3,8 @@ import PropTypes from "prop-types";
 import TasksTable from "./TasksTable";
 import TaskCard from "./TaskCard";
 import TaskToolbar from "./TaskToolBar";
-import Modal from "./Modal";
-import EditModal from "./EditModal";
+import Modal from "./Modals/Modal";
+import EditModal from "./Modals/EditModal";
 
 const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
   const [activeTab, setActiveTab] = useState(defaultTabId);
@@ -17,15 +17,21 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
     priority: "Media",
   });
   const [tasks, setTasks] = useState([]);
+  const [assignedTasks, setAssignedTasks] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]); // Tareas filtradas para "Tabla"
+  const [filteredAssignedTasks, setFilteredAssignedTasks] = useState([]); // Tareas filtradas para "Mis Tareas Asignadas"
   const [selectedTaskIds, setSelectedTaskIds] = useState([]);
   const [taskToEdit, setTaskToEdit] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(""); // Estado para el término de búsqueda
 
+  // Cargar tareas del espacio de trabajo
   useEffect(() => {
     const fetchTasks = async () => {
       console.log("Fetching tasks for workspaceId:", workspaceId);
       if (!workspaceId || isNaN(workspaceId)) {
         console.log("workspaceId no válido:", workspaceId);
         setTasks([]);
+        setFilteredTasks([]);
         return;
       }
       try {
@@ -39,23 +45,111 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log("Tareas recibidas para workspaceId", workspaceId, ":", data.tasks);
+          console.log(
+            "Tareas recibidas para workspaceId",
+            workspaceId,
+            ":",
+            data.tasks
+          );
           setTasks(data.tasks || []);
+          setFilteredTasks(data.tasks || []); // Inicializar las tareas filtradas
         } else {
           const errorData = await response.json();
-          console.error("Error al obtener tareas para workspaceId", workspaceId, ":", errorData);
-          alert(`Error al obtener tareas: ${errorData.error || "Error desconocido"}`);
+          console.error(
+            "Error al obtener tareas para workspaceId",
+            workspaceId,
+            ":",
+            errorData
+          );
+          alert(
+            `Error al obtener tareas: ${errorData.error || "Error desconocido"}`
+          );
           setTasks([]);
+          setFilteredTasks([]);
         }
       } catch (err) {
-        console.error("Error al obtener tareas para workspaceId", workspaceId, ":", err);
-        alert("Error al conectar con el servidor. Revisa la consola para más detalles.");
+        console.error(
+          "Error al obtener tareas para workspaceId",
+          workspaceId,
+          ":",
+          err
+        );
+        alert(
+          "Error al conectar con el servidor. Revisa la consola para más detalles."
+        );
         setTasks([]);
+        setFilteredTasks([]);
       }
     };
 
     fetchTasks();
   }, [workspaceId]);
+
+  // Cargar tareas asignadas al usuario
+  useEffect(() => {
+    const fetchAssignedTasks = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/my-assigned-tasks`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Tareas asignadas recibidas:", data.tasks);
+          setAssignedTasks(data.tasks || []);
+          setFilteredAssignedTasks(data.tasks || []); // Inicializar las tareas asignadas filtradas
+        } else {
+          const errorData = await response.json();
+          console.error("Error al obtener tareas asignadas:", errorData);
+          alert(
+            `Error al obtener tareas asignadas: ${
+              errorData.error || "Error desconocido"
+            }`
+          );
+          setAssignedTasks([]);
+          setFilteredAssignedTasks([]);
+        }
+      } catch (err) {
+        console.error("Error al obtener tareas asignadas:", err);
+        alert(
+          "Error al conectar con el servidor. Revisa la consola para más detalles."
+        );
+        setAssignedTasks([]);
+        setFilteredAssignedTasks([]);
+      }
+    };
+
+    fetchAssignedTasks();
+  }, []);
+
+  // Filtrar tareas cuando cambie el término de búsqueda
+  useEffect(() => {
+    const filterTasks = (tasksList) => {
+      if (!searchTerm.trim()) {
+        return tasksList; // Si no hay término de búsqueda, mostrar todas las tareas
+      }
+
+      const term = searchTerm.toLowerCase();
+      return tasksList.filter((task) => {
+        return (
+          (task.title && task.title.toLowerCase().includes(term)) ||
+          (task.description && task.description.toLowerCase().includes(term)) ||
+          (task.dueDate && task.dueDate.toLowerCase().includes(term)) ||
+          (task.priority && task.priority.toLowerCase().includes(term)) ||
+          (task.status && task.status.toLowerCase().includes(term)) ||
+          (task.assignedFirstName && task.assignedFirstName.toLowerCase().includes(term)) ||
+          (task.assignedLastName && task.assignedLastName.toLowerCase().includes(term))
+        );
+      });
+    };
+
+    setFilteredTasks(filterTasks(tasks));
+    setFilteredAssignedTasks(filterTasks(assignedTasks));
+  }, [searchTerm, tasks, assignedTasks]);
 
   useEffect(() => {
     if (isCreateModalOpen) {
@@ -68,21 +162,39 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
     }
   }, [isCreateModalOpen]);
 
+  // Función para manejar la actualización de tareas
+  const handleTasksUpdate = (updatedTasks) => {
+    if (activeTab === "profile") {
+      setTasks(updatedTasks);
+      setFilteredTasks(updatedTasks); // Actualizar las tareas filtradas
+    } else if (activeTab === "assigned") {
+      setAssignedTasks(updatedTasks);
+      setFilteredAssignedTasks(updatedTasks); // Actualizar las tareas asignadas filtradas
+    }
+  };
+
   const tabs = [
     {
       id: "profile",
       label: "Tabla",
       content: (
         <TasksTable
-          tasks={tasks}
+          tasks={filteredTasks} // Pasar las tareas filtradas
           onSelectionChange={setSelectedTaskIds}
+          onTasksUpdate={handleTasksUpdate}
         />
       ),
     },
     {
-      id: "dashboard",
-      label: "Targe",
-      content: <TaskCard />,
+      id: "assigned",
+      label: "Mis Tareas Asignadas",
+      content: (
+        <TasksTable
+          tasks={filteredAssignedTasks} // Pasar las tareas asignadas filtradas
+          onSelectionChange={setSelectedTaskIds}
+          onTasksUpdate={handleTasksUpdate}
+        />
+      ),
     },
   ];
 
@@ -107,37 +219,31 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/workspaces/${workspaceId}/tasks`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          title: newTask.title,
-          description: newTask.description,
-          dueDate: newTask.dueDate,
-          priority: newTask.priority,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/workspaces/${workspaceId}/tasks`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            title: newTask.title,
+            description: newTask.description,
+            dueDate: newTask.dueDate,
+            priority: newTask.priority,
+          }),
+        }
+      );
 
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || "Error al guardar la tarea");
       }
 
-      const tasksResponse = await fetch(`http://localhost:5000/api/workspaces/${workspaceId}/tasks`, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (tasksResponse.ok) {
-        const tasksData = await tasksResponse.json();
-        setTasks(tasksData.tasks);
-      } else {
-        console.error("Error al recargar tareas:", await tasksResponse.json());
-        setTasks([]);
-      }
+      const updatedTasks = [...tasks, data.task];
+      setTasks(updatedTasks);
+      setFilteredTasks(updatedTasks); // Actualizar las tareas filtradas
 
       setNewTask({
         title: "",
@@ -149,7 +255,9 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
     } catch (err) {
       console.error("Error al guardar la tarea:", err);
       if (err.message.includes("Espacio de trabajo no encontrado")) {
-        alert("El espacio de trabajo no existe o no tienes permisos. Verifica el ID.");
+        alert(
+          "El espacio de trabajo no existe o no tienes permisos. Verifica el ID."
+        );
       } else {
         alert("Error al guardar la tarea: " + err.message);
       }
@@ -171,22 +279,28 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
       );
 
       if (response.ok) {
-        const tasksResponse = await fetch(`http://localhost:5000/api/workspaces/${workspaceId}/tasks`, {
-          method: "GET",
-          credentials: "include",
-        });
-        if (tasksResponse.ok) {
-          const tasksData = await tasksResponse.json();
-          setTasks(tasksData.tasks);
-          setSelectedTaskIds([]);
-        }
+        const updatedTasks = tasks.filter((task) => !taskIds.includes(task.id));
+        setTasks(updatedTasks);
+        setFilteredTasks(updatedTasks);
+
+        const updatedAssignedTasks = assignedTasks.filter(
+          (task) => !taskIds.includes(task.id)
+        );
+        setAssignedTasks(updatedAssignedTasks);
+        setFilteredAssignedTasks(updatedAssignedTasks);
+
+        setSelectedTaskIds([]);
       } else {
         const errorData = await response.json();
-        alert(`Error al eliminar tareas: ${errorData.error || "Error desconocido"}`);
+        alert(
+          `Error al eliminar tareas: ${errorData.error || "Error desconocido"}`
+        );
       }
     } catch (err) {
       console.error("Error al eliminar tareas:", err);
-      alert("Error al conectar con el servidor. Revisa la consola para más detalles.");
+      alert(
+        "Error al conectar con el servidor. Revisa la consola para más detalles."
+      );
     }
   };
 
@@ -241,18 +355,18 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
         throw new Error(data.error || "Error al actualizar la tarea");
       }
 
-      const tasksResponse = await fetch(`http://localhost:5000/api/workspaces/${workspaceId}/tasks`, {
-        method: "GET",
-        credentials: "include",
-      });
+      const updatedTask = data.task;
+      const updatedTasks = tasks.map((task) =>
+        task.id === updatedTask.id ? updatedTask : task
+      );
+      setTasks(updatedTasks);
+      setFilteredTasks(updatedTasks);
 
-      if (tasksResponse.ok) {
-        const tasksData = await tasksResponse.json();
-        setTasks(tasksData.tasks);
-      } else {
-        console.error("Error al recargar tareas:", await tasksResponse.json());
-        setTasks([]);
-      }
+      const updatedAssignedTasks = assignedTasks.map((task) =>
+        task.id === updatedTask.id ? updatedTask : task
+      );
+      setAssignedTasks(updatedAssignedTasks);
+      setFilteredAssignedTasks(updatedAssignedTasks);
 
       setTaskToEdit(null);
       setIsEditModalOpen(false);
@@ -289,18 +403,22 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
         throw new Error(data.error || "Error al asignar el responsable");
       }
 
-      const tasksResponse = await fetch(`http://localhost:5000/api/workspaces/${workspaceId}/tasks`, {
-        method: "GET",
-        credentials: "include",
-      });
+      const updatedTask = data.task;
+      const updatedTasks = tasks.map((task) =>
+        task.id === updatedTask.id ? updatedTask : task
+      );
+      setTasks(updatedTasks);
+      setFilteredTasks(updatedTasks);
 
-      if (tasksResponse.ok) {
-        const tasksData = await tasksResponse.json();
-        setTasks(tasksData.tasks);
-      } else {
-        console.error("Error al recargar tareas:", await tasksResponse.json());
-        setTasks([]);
-      }
+      const updatedAssignedTasks = assignedTasks.some(
+        (task) => task.id === updatedTask.id
+      )
+        ? assignedTasks.map((task) =>
+            task.id === updatedTask.id ? updatedTask : task
+          )
+        : [...assignedTasks, updatedTask];
+      setAssignedTasks(updatedAssignedTasks);
+      setFilteredAssignedTasks(updatedAssignedTasks);
     } catch (err) {
       console.error("Error al asignar el responsable:", err);
       alert("Error al asignar el responsable: " + err.message);
@@ -338,6 +456,7 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
         onDelete={handleDelete}
         onEdit={handleEdit}
         onAssign={handleAssignTask}
+        onSearch={setSearchTerm} // Pasar la función para actualizar el término de búsqueda
       />
       <div id="default-styled-tab-content">
         {tabs.map((tab) => (
