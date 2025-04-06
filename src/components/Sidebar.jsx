@@ -22,7 +22,7 @@ export default function Sidebar({
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/workspaces", {
+      const response = await fetch("http://localhost:5000/workspaces", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

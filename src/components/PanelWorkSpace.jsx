@@ -10,7 +10,7 @@ export default function PanelWorkSpace() {
   useEffect(() => {
     const fetchWorkspaces = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/workspaces", {
+        const response = await fetch("http://localhost:5000/workspaces", {
           method: "GET",
           credentials: "include",
         });
@@ -37,7 +37,7 @@ export default function PanelWorkSpace() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/workspaces/${workspaceId}`, {
+      const response = await fetch(`http://localhost:5000/workspaces/${workspaceId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -66,7 +66,7 @@ export default function PanelWorkSpace() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/workspaces/${editWorkspace.id}`, {
+      const response = await fetch(`http://localhost:5000/workspaces/${editWorkspace.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

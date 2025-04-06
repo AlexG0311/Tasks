@@ -18,7 +18,7 @@ export function GestionUsuarios({ handleGoHome }) { // Recibe handleGoHome como 
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/users", {
+      const response = await fetch("http://localhost:5000/user", {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Error al obtener los usuarios");
@@ -50,7 +50,7 @@ export function GestionUsuarios({ handleGoHome }) { // Recibe handleGoHome como 
     const userData = { firstName, lastName, email, password, role: selectedRole };
 
     try {
-      const response = await fetch("http://localhost:5000/api/register", {
+      const response = await fetch("http://localhost:5000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

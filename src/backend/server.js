@@ -1,17 +1,18 @@
 import express, { json } from "express";
-import { createPool } from "mysql2/promise";
-import { hash, compare } from "bcrypt";
+import { RouterUser } from "./routes/user.js";
 import cors from "cors";
-import pkg from 'jsonwebtoken';
-const { verify, sign } = pkg;
 import cookieParser from "cookie-parser";
 import { schedule } from "node-cron";
 import { createServer } from "http";
 import { Server } from "socket.io";
-
+import { RouterRegistrar } from "./routes/register.js";
+import { db } from "./conexion/MySql.js";
+import { authenticateToken } from "./JWT/authenticateToken.js";
+import { RouterLogin } from "./routes/login.js";
+import { RouterWorkspace } from "./routes/worskpace.js";
 const app = express();
 const PORT = process.env.PORT ?? 5000;
-const JWT_SECRET = "1234";
+
 
 // Configura el servidor HTTP
 const server = createServer(app);
@@ -34,25 +35,6 @@ app.use(
   })
 );
 
-const db = createPool({
-  host: "localhost",
-  user: "root",
-  password: "root",
-  database: "tareas_",
-});
-
-async function testConnection() {
-  try {
-    const connection = await db.getConnection();
-    console.log("¡Conexión a MySQL exitosa!");
-    connection.release();
-  } catch (err) {
-    console.error("Error al conectar a MySQL:", err.message);
-    process.exit(1);
-  }
-}
-
-testConnection();
 
 // Configura Socket.IO para manejar conexiones
 io.on("connection", (socket) => {
@@ -119,120 +101,15 @@ app.get("/api/test", async (req, res) => {
   }
 });
 
-// Middleware de autenticación
-const authenticateToken = (req, res, next) => {
-  const token = req.cookies.token;
-
-  if (!token) return res.status(401).json({ error: "Acceso denegado. Token no proporcionado." });
-
-  verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: "Token inválido." });
-    req.user = user;
-    next();
-  });
-};
 
 // Registro de usuario
-app.post("/api/register", async (req, res) => {
-  const { firstName, lastName, email, password, role } = req.body;
-
-  try {
-    const [existingUser] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
-    if (existingUser.length > 0) {
-      return res.status(400).json({ error: "El correo ya está registrado." });
-    }
-
-    const saltRounds = 10;
-    const hashedPassword = await hash(password, saltRounds);
-
-    const [userResult] = await db.query(
-      "INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)",
-      [firstName, lastName, email, hashedPassword]
-    );
-
-    const userId = userResult.insertId;
-
-    const [roleResult] = await db.query("SELECT id FROM rol WHERE nombre = ?", [role]);
-    if (roleResult.length === 0) {
-      return res.status(400).json({ error: "El rol seleccionado no existe." });
-    }
-    const roleId = roleResult[0].id;
-
-    await db.query("INSERT INTO usuario_rol (usuario_id, rol_id) VALUES (?, ?)", [userId, roleId]);
-
-    res.status(201).json({ message: "Usuario registrado exitosamente con rol asignado." });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al registrar el usuario." });
-  }
-});
+app.use("/register", RouterRegistrar)
 
 // Obtener usuarios
-app.get("/api/users", authenticateToken, async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      `SELECT u.id, u.first_name AS firstName, u.last_name AS lastName, u.email, r.nombre AS role
-       FROM users u
-       LEFT JOIN usuario_rol ur ON u.id = ur.usuario_id
-       LEFT JOIN rol r ON ur.rol_id = r.id`
-    );
-
-    res.json(rows);
-  } catch (err) {
-    console.error("Error al obtener usuarios:", err);
-    res.status(500).json({ error: "Error al obtener usuarios" });
-  }
-});
+app.use("/user", RouterUser )
 
 // Inicio de sesión
-app.post("/api/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const [user] = await db.query(
-      `SELECT u.id, u.email, u.password, r.nombre AS role 
-       FROM users u
-       LEFT JOIN usuario_rol ur ON u.id = ur.usuario_id
-       LEFT JOIN rol r ON ur.rol_id = r.id
-       WHERE u.email = ?`,
-      [email]
-    );
-
-    if (user.length === 0) {
-      return res.status(401).json({ error: "Credenciales incorrectas." });
-    }
-
-    const isMatch = await compare(password, user[0].password);
-    if (!isMatch) {
-      return res.status(401).json({ error: "Credenciales incorrectas." });
-    }
-
-    const token = sign(
-      { id: user[0].id, email: user[0].email, role: user[0].role },
-      JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 3600000,
-    });
-
-    res.json({ 
-      message: "Login exitoso", 
-      user: { 
-        id: user[0].id, 
-        email: user[0].email, 
-        role: user[0].role 
-      } 
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al iniciar sesión." });
-  }
-});
+app.use("/login", RouterLogin )
 
 // Cierre de sesión
 app.post("/api/logout", (req, res) => {
@@ -245,118 +122,11 @@ app.get("/api/protected", authenticateToken, (req, res) => {
   res.json({ message: "Acceso permitido", user: req.user });
 });
 
-// Crear espacio de trabajo
-app.post("/api/workspaces", authenticateToken, async (req, res) => {
-  const { name } = req.body;
-  const createdBy = req.user.id;
+// Rutas espacio de trabajo
+app.use("/workspaces", RouterWorkspace);
 
-  if (!name || !name.trim()) {
-    return res.status(400).json({ error: "El nombre del espacio de trabajo es obligatorio." });
-  }
 
-  try {
-    const [result] = await db.query(
-      "INSERT INTO workspaces (name, created_by) VALUES (?, ?)",
-      [name.trim(), createdBy]
-    );
-
-    res.status(201).json({
-      message: "Espacio de trabajo creado exitosamente.",
-      workspace: {
-        id: result.insertId,
-        name: name.trim(),
-        created_by: createdBy,
-      },
-    });
-  } catch (err) {
-    console.error("Error al crear el espacio de trabajo:", err);
-    res.status(500).json({ error: "Error al crear el espacio de trabajo." });
-  }
-});
-
-// Obtener espacios de trabajo
-app.get("/api/workspaces", authenticateToken, async (req, res) => {
-  const userId = req.user.id;
-
-  try {
-    const [rows] = await db.query(
-      "SELECT id, name FROM workspaces WHERE created_by = ?",
-      [userId]
-    );
-
-    res.json({
-      message: "Espacios de trabajo obtenidos exitosamente.",
-      workspaces: rows,
-    });
-  } catch (err) {
-    console.error("Error al obtener los espacios de trabajo:", err);
-    res.status(500).json({ error: "Error al obtener los espacios de trabajo." });
-  }
-});
-
-// Actualizar espacio de trabajo
-app.put("/api/workspaces/:id", authenticateToken, async (req, res) => {
-  const workspaceId = req.params.id;
-  const userId = req.user.id;
-  const { name } = req.body;
-
-  if (!name || !name.trim()) {
-    return res.status(400).json({ error: "El nombre del espacio de trabajo es obligatorio." });
-  }
-
-  try {
-    const [workspace] = await db.query(
-      "SELECT id FROM workspaces WHERE id = ? AND created_by = ?",
-      [workspaceId, userId]
-    );
-
-    if (workspace.length === 0) {
-      return res.status(404).json({ error: "Espacio de trabajo no encontrado o no tienes permisos." });
-    }
-
-    await db.query(
-      "UPDATE workspaces SET name = ? WHERE id = ?",
-      [name.trim(), workspaceId]
-    );
-
-    res.json({
-      message: "Espacio de trabajo actualizado exitosamente.",
-      workspace: {
-        id: parseInt(workspaceId),
-        name: name.trim(),
-      },
-    });
-  } catch (err) {
-    console.error("Error al actualizar el espacio de trabajo:", err);
-    res.status(500).json({ error: "Error al actualizar el espacio de trabajo." });
-  }
-});
-
-// Eliminar espacio de trabajo
-app.delete("/api/workspaces/:id", authenticateToken, async (req, res) => {
-  const workspaceId = req.params.id;
-  const userId = req.user.id;
-
-  try {
-    const [workspace] = await db.query(
-      "SELECT id FROM workspaces WHERE id = ? AND created_by = ?",
-      [workspaceId, userId]
-    );
-
-    if (workspace.length === 0) {
-      return res.status(404).json({ error: "Espacio de trabajo no encontrado o no tienes permisos." });
-    }
-
-    await db.query("DELETE FROM workspaces WHERE id = ?", [workspaceId]);
-
-    res.json({ message: "Espacio de trabajo eliminado exitosamente." });
-  } catch (err) {
-    console.error("Error al eliminar el espacio de trabajo:", err);
-    res.status(500).json({ error: "Error al eliminar el espacio de trabajo." });
-  }
-});
-
-// Crear tarea
+// Rutas tarea
 app.post("/api/workspaces/:workspaceId/tasks", authenticateToken, async (req, res) => {
   const workspaceId = req.params.workspaceId;
   const userId = req.user.id;

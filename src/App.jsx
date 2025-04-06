@@ -40,7 +40,7 @@ export function App() {
           setUser(data.user);
 
           const workspacesResponse = await fetch(
-            "http://localhost:5000/api/workspaces",
+            "http://localhost:5000/workspaces",
             {
               method: "GET",
               credentials: "include",
@@ -186,9 +186,9 @@ export function App() {
             rgba(23, 2, 147, 0.15) 35%, 
             rgba(8, 33, 175, 0.1) 40%, 
             rgba(0, 26, 96, 0.68) 64%,
-rgba(11, 20, 193, 0.3) 65%,
-rgba(1, 3, 35, 0.99) 85%
-          )
+            rgba(11, 20, 193, 0.3) 65%,
+            rgba(1, 3, 35, 0.99) 85%
+            )
         `,
       }}
     >
