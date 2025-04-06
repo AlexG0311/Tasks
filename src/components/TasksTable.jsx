@@ -1,19 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import SeleccionarEstado from "./SeleccionarEstado";
-import CommentsPanel from "./CommentsPanel"; // Importar el nuevo componente
+import CommentsPanel from "./CommentsPanel";
 
 const statusColors = {
-  "Pendiente": "bg-gray-400",
-  "En Progreso": "bg-yellow-400",
-  "Completada": "bg-green-400",
+  "Pendiente": "bg-gray-500",
+  "En Progreso": "bg-yellow-600",
+  "Completada": "bg-green-600",
 };
 
 const TasksTable = ({ tasks, onSelectionChange, onTasksUpdate }) => {
   const [selectedTasks, setSelectedTasks] = useState(new Set());
   const [openStatusDropdownId, setOpenStatusDropdownId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
-  const [openCommentsTaskId, setOpenCommentsTaskId] = useState(null); // Estado para controlar el panel de comentarios
+  const [openCommentsTaskId, setOpenCommentsTaskId] = useState(null);
   const statusButtonRefs = useRef({});
   const tableContainerRef = useRef(null);
 
@@ -70,7 +70,6 @@ const TasksTable = ({ tasks, onSelectionChange, onTasksUpdate }) => {
       const data = await response.json();
       const updatedTask = data.task;
 
-      // Actualizar las tareas localmente
       const updatedTasks = tasks.map((task) =>
         task.id === updatedTask.id ? updatedTask : task
       );
@@ -86,7 +85,6 @@ const TasksTable = ({ tasks, onSelectionChange, onTasksUpdate }) => {
     }
   };
 
-  // Función para abrir/cerrar el panel de comentarios
   const toggleCommentsPanel = (taskId) => {
     if (openCommentsTaskId === taskId) {
       setOpenCommentsTaskId(null);
@@ -100,7 +98,7 @@ const TasksTable = ({ tasks, onSelectionChange, onTasksUpdate }) => {
       if (
         !event.target.closest(".status-dropdown") &&
         !event.target.closest(".status-button") &&
-        !event.target.closest(".comments-panel") // Evitar cerrar el panel de comentarios
+        !event.target.closest(".comments-panel")
       ) {
         setOpenStatusDropdownId(null);
       }
@@ -142,76 +140,103 @@ const TasksTable = ({ tasks, onSelectionChange, onTasksUpdate }) => {
 
   return (
     <div className="relative">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-lg shadow-md">
         <div
           ref={tableContainerRef}
           className="max-h-[400px] overflow-y-auto relative"
         >
-          <table className="min-w-full bg-white border border-gray-200">
+          <table className="min-w-full bg-gray-800 border border-gray-600 rounded-lg overflow-hidden">
             <thead>
-              <tr className="bg-gray-100">
-                <th></th>
-                <th className="py-2 px-4 border-b text-left">Título</th>
-                <th className="py-2 px-4 border-b text-left">Descripción</th>
-                <th className="py-2 px-4 border-b text-left">Fecha de Vencimiento</th>
-                <th className="py-2 px-4 border-b text-left">Prioridad</th>
-                <th className="py-2 px-4 border-b text-left">Estado</th>
-                <th className="py-2 px-4 border-b text-left">Responsable</th>
+              <tr className="bg-gray-700 text-gray-200">
+                <th className="py-2 px-4 border-b border-gray-600 text-left w-12"></th>
+                <th className="py-2 px-4 border-b border-gray-600 text-left">Título</th>
+                <th className="py-2 px-4 border-b border-gray-600 text-left">Descripción</th>
+                <th className="py-2 px-4 border-b border-gray-600 text-left">Fecha de Vencimiento</th>
+                <th className="py-2 px-4 border-b border-gray-600 text-left">Prioridad</th>
+                <th className="py-2 px-4 border-b border-gray-600 text-left">Estado</th>
+                <th className="py-2 px-4 border-b border-gray-600 text-left">Responsable</th>
+                <th className="py-2 px-4 border-b border-gray-600 text-left">Comentarios</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-600">
               {tasks.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-4 px-4 text-center text-gray-500">
+                  <td colSpan="8" className="py-4 px-4 text-center text-gray-400">
                     No hay tareas disponibles.
                   </td>
                 </tr>
               ) : (
                 tasks.map((task) => (
-                  <tr key={task.id} className="hover:bg-gray-50">
-                    <td className="py-2 px-4 border-b">
+                  <tr key={task.id} className="hover:bg-gray-700 transition-colors">
+                    <td className="py-2 px-4 border-b border-gray-600">
                       <input
                         type="checkbox"
                         checked={selectedTasks.has(task.id)}
                         onChange={() => handleCheckboxChange(task.id)}
+                        className="rounded border-gray-500 text-purple-600 focus:ring-purple-500"
                       />
                     </td>
-                    <td className="py-2 px-4 border-b">{task.title}</td>
-                    <td className="py-2 px-4 border-b">
+                    <td className="py-2 px-4 border-b border-gray-600 text-white">{task.title}</td>
+                    <td className="py-2 px-4 border-b border-gray-600 text-gray-200">
                       {task.description || "Sin descripción"}
                     </td>
-                    <td className="py-2 px-4 border-b">
+                    <td className="py-2 px-4 border-b border-gray-600 text-gray-200">
                       {task.dueDate || "Sin fecha"}
                     </td>
-                    <td className="py-2 px-4 border-b">{task.priority}</td>
-                    <td className="py-2 px-4 border-b">
+                    <td className="py-2 px-4 border-b border-gray-600 text-gray-200">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          task.priority === "Alta"
+                            ? "bg-red-700 text-red-100"
+                            : task.priority === "Media"
+                            ? "bg-yellow-700 text-yellow-100"
+                            : "bg-green-700 text-green-100"
+                        }`}
+                      >
+                        {task.priority}
+                      </span>
+                    </td>
+                    <td className="py-2 px-4 border-b  border-gray-600">
                       <div className="flex items-center space-x-2">
                         <button
                           ref={(el) => (statusButtonRefs.current[task.id] = el)}
                           className={`status-button p-1 rounded-md transition-colors ${
-                            statusColors[task.status] || "bg-gray-400"
-                          } text-white flex-1 text-center`}
+                            statusColors[task.status] || "bg-gray-500"
+                          } text-white flex-1 text-center text-sm`}
                           onClick={() => toggleStatusDropdown(task.id)}
                         >
                           {task.status}
                         </button>
                         <div className="flex-shrink-0">
-                          <script src="https://animatedicons.co/scripts/embed-animated-icons.js"></script>
-                          <animated-icons
-                            src="https://animatedicons.co/get-icon?name=Feedback&style=minimalistic&token=1c51c7cf-4171-47da-8a99-9ad866be3701"
-                            trigger="click"
-                            attributes='{"variationThumbColour":"#FFFFFF","variationName":"Normal","variationNumber":1,"numberOfGroups":1,"backgroundIsGroup":false,"strokeWidth":1,"defaultColours":{"group-1":"#000000","background":"#FFFFFF"}}'
-                            height="30"
-                            width="30"
-                            onClick={() => toggleCommentsPanel(task.id)} // Abrir el panel al hacer clic
-                          ></animated-icons>
+                         
                         </div>
                       </div>
                     </td>
-                    <td className="py-2 px-4 border-b">
+                    <td className="py-2 px-4 border-b border-gray-600 text-gray-200">
                       {task.assignedFirstName && task.assignedLastName
                         ? `${task.assignedFirstName} ${task.assignedLastName}`
                         : "No asignado"}
+                    </td>
+                    <td className="py-2 px-4 border-b border-gray-600">
+                      <button
+                        onClick={() => toggleCommentsPanel(task.id)}
+                        className="text-gray-400 hover:text-purple-300 transition-colors"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M8 10h8m-4-4v8m9-4a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -222,7 +247,7 @@ const TasksTable = ({ tasks, onSelectionChange, onTasksUpdate }) => {
       </div>
       {openStatusDropdownId && (
         <div
-          className="status-dropdown absolute z-10 w-48 bg-white border border-gray-200 rounded-md shadow-lg"
+          className="status-dropdown absolute z-10 w-48 bg-gray-800 border border-gray-600 rounded-md shadow-lg"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,

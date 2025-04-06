@@ -66,9 +66,9 @@ export default function Header({ handleLogout }) {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white shadow-sm flex items-center justify-between px-6 z-10">
-      <h1 className="text-2xl ml-26  font-bold text-purple-600 cursor-pointer">
-        XYZ
+    <header className="fixed top-0 left-0 right-0 bg-transparent backdrop-blur-sm h-16 flex items-center justify-between px-6 z-10 border-b border-purple-500 border-opacity-30">
+      <h1 className="text-2xl ml-26 font-bold text-white cursor-pointer">
+        <span className="highlight">XYZ</span>
       </h1>
 
       <div className="flex items-center space-x-4 relative">
@@ -76,15 +76,16 @@ export default function Header({ handleLogout }) {
         <div className="relative">
           <button
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className="cursor-pointer relative"
+            className="cursor-pointer relative text-white hover:text-purple-300 transition-colors"
           >
-            <animated-icons
-              src="https://animatedicons.co/get-icon?name=notification&style=minimalistic&token=2a8c285f-a7a0-4f4d-b2c3-acccc136c454"
-              trigger="hover"
-              attributes='{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1,"defaultColours":{"group-1":"#000000","group-2":"#536DFE","background":"#FFFFFF"}}'
-              height="30"
-              width="30"
-            ></animated-icons>
+            <script src="https://animatedicons.co/scripts/embed-animated-icons.js"></script>
+              <animated-icons
+                src="https://animatedicons.co/get-icon?name=notification&style=minimalistic&token=2a8c285f-a7a0-4f4d-b2c3-acccc136c454"
+                trigger="click"
+                attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.1800000000000002,"backgroundIsGroup":true,"defaultColours":{"group-1":"#E6E9EC","group-2":"#000000","background":"#000000"}}'
+                height="40"
+                width="40"
+              ></animated-icons>
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {unreadCount}
@@ -94,21 +95,21 @@ export default function Header({ handleLogout }) {
 
           {/* Dropdown de notificaciones */}
           {isNotificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 shadow-md rounded-lg p-2 max-h-96 overflow-y-auto">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Notificaciones</h3>
+            <div className="absolute right-0 mt-2 w-80 bg-gray-900 border border-purple-500 border-opacity-30 shadow-lg rounded-lg p-2 max-h-96 overflow-y-auto">
+              <h3 className="text-sm font-semibold text-purple-300 mb-2">Notificaciones</h3>
               {notifications.length === 0 ? (
-                <p className="text-sm text-gray-500">No hay notificaciones.</p>
+                <p className="text-sm text-gray-400">No hay notificaciones.</p>
               ) : (
                 notifications.map((notif) => (
                   <div
                     key={notif.id}
                     className={`p-2 mb-1 rounded-md ${
-                      notif.read ? "bg-gray-100" : "bg-purple-50"
+                      notif.read ? "bg-gray-800" : "bg-purple-900 bg-opacity-40"
                     } flex justify-between items-start`}
                   >
                     <div>
-                      <p className="text-sm font-medium">{notif.taskTitle}</p>
-                      <p className="text-xs text-gray-600">{notif.message}</p>
+                      <p className="text-sm font-medium text-white">{notif.taskTitle}</p>
+                      <p className="text-xs text-gray-300">{notif.message}</p>
                       <p className="text-xs text-gray-400">
                         {new Date(notif.date).toLocaleString()}
                       </p>
@@ -116,7 +117,7 @@ export default function Header({ handleLogout }) {
                     {!notif.read && (
                       <button
                         onClick={() => markAsRead(notif.id)}
-                        className="text-xs text-purple-600 hover:underline"
+                        className="text-xs text-purple-300 hover:text-purple-200 hover:underline"
                       >
                         Marcar como leída
                       </button>
@@ -128,17 +129,11 @@ export default function Header({ handleLogout }) {
           )}
         </div>
 
-        <animated-icons
-          src="https://animatedicons.co/get-icon?name=Light%20Mode&style=minimalistic&token=5f4d2675-67d4-4c5e-9139-8226e36723ae"
-          trigger="hover"
-          attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.5,"backgroundIsGroup":true,"defaultColours":{"group-1":"#E6E9EC","group-2":"#000000","background":"#000000"}}'
-          height="35"
-          width="35"
-        ></animated-icons>
+       
 
-        <button>
+        <button className="text-white">
           <img
-            className="h-5 w-5"
+            className="h-5 w-5 brightness-0 invert"
             src="/src/assets/barra-de-puntos.png"
             alt="Barra de puntos"
           />
@@ -148,23 +143,24 @@ export default function Header({ handleLogout }) {
         <div className="relative">
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="cursor-pointer"
+            className="cursor-pointer text-white"
           >
+           <script src="https://animatedicons.co/scripts/embed-animated-icons.js"></script>
             <animated-icons
               src="https://animatedicons.co/get-icon?name=user%20profile&style=minimalistic&token=9b327b61-1433-451f-a476-148402217e82"
-              trigger="hover"
-              attributes='{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1,"defaultColours":{"group-1":"#000000","group-2":"#536DFE","background":"#FFFFFF"}}'
-              height="35"
-              width="35"
+              trigger="click"
+              attributes='{"variationThumbColour":"#000000","variationName":"Dark","variationNumber":4,"numberOfGroups":2,"strokeWidth":1.46,"backgroundIsGroup":true,"defaultColours":{"group-1":"#E6E9EC","group-2":"#000000","background":"#000000"}}'
+              height="45"
+              width="45"
             ></animated-icons>
           </button>
 
           {/* Ventana emergente (dropdown) */}
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 shadow-md rounded-lg p-2">
+            <div className="absolute right-0 mt-2 w-40 bg-gray-900 border border-purple-500 border-opacity-30 shadow-lg rounded-lg p-2">
               <button
                 onClick={handleLogout}
-                className="w-full text-left text-red-500 font-semibold py-2 px-4 rounded-md hover:bg-gray-100"
+                className="w-full text-left text-red-400 font-semibold py-2 px-4 rounded-md hover:bg-gray-800"
               >
                 Cerrar Sesión
               </button>
@@ -172,6 +168,16 @@ export default function Header({ handleLogout }) {
           )}
         </div>
       </div>
+      
+      {/* Estilo CSS para el degradado del texto */}
+      <style>{`
+        .highlight {
+          background: linear-gradient(90deg, #f472b6 0%, #a78bfa 50%, #60a5fa 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-weight: 700;
+        }
+      `}</style>
     </header>
   );
 }

@@ -1,8 +1,10 @@
 import PropTypes from "prop-types";
 import Tabs from "./Tabs";
 import PanelWorkSpace from "./PanelWorkSpace";
+import { PanelAdmin } from "./PanelAdmin";
 
 export default function MainArea({
+  user,
   selectedWorkspace,
   boards,
   selectedBoard,
@@ -11,6 +13,11 @@ export default function MainArea({
   setViewMode,
   setIsModalOpen,
 }) {
+  // Si el usuario es administrador, mostrar el área del admin
+  if (user?.role === "Administrador") {
+    return <PanelAdmin />;
+  }
+
   // Si no hay un selectedWorkspace, mostrar PanelWorkSpace
   if (!selectedWorkspace) {
     return <PanelWorkSpace />;
@@ -18,11 +25,10 @@ export default function MainArea({
 
   // Si hay un selectedWorkspace, renderizar el contenido con Tabs
   return (
-    <main className="flex-1 p-6">
+    <main className="flex-1 p-6 mt-11 bg-transparent">
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-800">{selectedWorkspace.name}</h2>
         <div className="flex space-x-2 mb-4">
-          <div className="w-282 bg-white mt-3 rounded-sm shadow-md p-4 h-[calc(100vh-4rem)]">
+          <div className="w-282 bg-black/30 mt-3 rounded-lg shadow-md p-4 h-[calc(100vh-4rem)] border border-gray-600">
             <Tabs workspaceId={selectedWorkspace.id} />
           </div>
         </div>
@@ -32,6 +38,10 @@ export default function MainArea({
 }
 
 MainArea.propTypes = {
+  user: PropTypes.shape({
+    email: PropTypes.string,
+    role: PropTypes.oneOf(["admin", "member"]).isRequired,
+  }).isRequired,
   selectedWorkspace: PropTypes.shape({
     id: PropTypes.number,
     name: PropTypes.string,

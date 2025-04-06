@@ -136,14 +136,7 @@ const LoginForm = ({ onLoginSuccess, onToggleRegister }) => {
           >
             Iniciar Sesión
           </button>
-          <div className="text-center mt-4">
-            <button
-              onClick={() => onToggleRegister(true)}
-              className="text-purple-300 hover:text-purple-200 hover:underline transition-colors"
-            >
-              ¿No tienes cuenta? Regístrate
-            </button>
-          </div>
+         
         </form>
       </div>
     </div>

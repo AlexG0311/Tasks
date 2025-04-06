@@ -5,6 +5,7 @@ import MainArea from "./components/MainArea";
 import Modal from "./components/Modals/Modal";
 import RegisterForm from "./components/Auth/RegisterForm";
 import LoginForm from "./components/Auth/LoginForm";
+import { PanelAdmin } from "./components/PanelAdmin";
 
 export function App() {
   const [user, setUser] = useState(null);
@@ -51,7 +52,6 @@ export function App() {
             const loadedWorkspaces = workspacesData.workspaces || [];
             setWorkspaces(loadedWorkspaces);
 
-            // Intentar restaurar el workspace seleccionado desde localStorage
             const savedWorkspaceId = localStorage.getItem("selectedWorkspaceId");
             if (savedWorkspaceId) {
               const savedWorkspace = loadedWorkspaces.find(
@@ -84,7 +84,6 @@ export function App() {
     console.log("Seleccionando workspace:", workspace);
     setSelectedWorkspace(workspace);
     setIsDropdownOpen(false);
-    // Guardar el ID del workspace seleccionado en localStorage
     localStorage.setItem("selectedWorkspaceId", workspace.id);
   };
 
@@ -125,7 +124,6 @@ export function App() {
       setWorkspaces([]);
       setBoards({});
       setViewMode("tabla");
-      // Limpiar el workspace seleccionado de localStorage al cerrar sesión
       localStorage.removeItem("selectedWorkspaceId");
       console.log("Sesión cerrada exitosamente.");
     } catch (err) {
@@ -177,42 +175,81 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex font-sans">
+    <div
+      className="min-h-screen flex font-sans relative"
+      style={{
+        backgroundColor: "#060c1c", // --darker-navy
+        backgroundImage: `
+          radial-gradient(
+            circle at 50% 100%, 
+            rgba(3, 16, 255, 0.28) 10%, 
+            rgba(23, 2, 147, 0.15) 35%, 
+            rgba(8, 33, 175, 0.1) 40%, 
+            rgba(0, 26, 96, 0.68) 64%,
+rgba(11, 20, 193, 0.3) 65%,
+rgba(1, 3, 35, 0.99) 85%
+          )
+        `,
+      }}
+    >
+      {/* Pseudo-elemento ::before para el patrón de cuadrícula */}
+      <div
+        className="absolute inset-0 z-[-1]"
+        style={{
+          backgroundImage: `
+            linear-gradient(0deg, transparent 49%, rgba(30, 58, 138, 0.05) 50%, transparent 51%),
+            linear-gradient(90deg, transparent 49%, rgba(30, 58, 138, 0.05) 50%, transparent 51%)
+          `,
+          backgroundSize: "40px 40px",
+          opacity: 0.4,
+        }}
+      />
       {user ? (
-        <>
-          <Header handleLogout={handleLogout} />
-          <Sidebar
-            isDropdownOpen={isDropdownOpen}
-            setIsDropdownOpen={setIsDropdownOpen}
-            selectedWorkspace={selectedWorkspace}
-            handleSelectWorkspace={handleSelectWorkspace}
-            setIsModalOpen={setIsModalOpen}
-            workspaces={workspaces}
-            setWorkspaces={setWorkspaces}
-          />
-          <MainArea
-            selectedWorkspace={selectedWorkspace}
-            boards={boards}
-            selectedBoard={selectedBoard}
-            handleSelectBoard={handleSelectBoard}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            setIsModalOpen={setIsModalOpen}
-          />
-          <Modal
-            isOpen={isModalOpen}
-            setIsOpen={setIsModalOpen}
-            newBoard={newBoard}
-            setNewBoard={setNewBoard}
-            handleAddBoard={handleAddBoard}
-            selectedBoard={selectedBoard}
-            newTask={newTask}
-            handleChangeTask={handleChangeTask}
-            handleSaveTask={handleSaveTask}
-          />
-        </>
+        user.role === "Administrador" ? (
+          // 🚀 Si el usuario es ADMIN, solo muestra Header y PanelAdmin
+          <>
+            <Header handleLogout={handleLogout} />
+            <PanelAdmin />
+          </>
+        ) : (
+          // 👤 Si es usuario normal, muestra Sidebar + MainArea
+          <>
+            <Header handleLogout={handleLogout} />
+            <Sidebar
+              user={user}
+              isDropdownOpen={isDropdownOpen}
+              setIsDropdownOpen={setIsDropdownOpen}
+              selectedWorkspace={selectedWorkspace}
+              handleSelectWorkspace={handleSelectWorkspace}
+              setIsModalOpen={setIsModalOpen}
+              workspaces={workspaces}
+              setWorkspaces={setWorkspaces}
+            />
+            <MainArea
+              user={user}
+              selectedWorkspace={selectedWorkspace}
+              boards={boards}
+              selectedBoard={selectedBoard}
+              handleSelectBoard={handleSelectBoard}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              setIsModalOpen={setIsModalOpen}
+            />
+            <Modal
+              isOpen={isModalOpen}
+              setIsOpen={setIsModalOpen}
+              newBoard={newBoard}
+              setNewBoard={setNewBoard}
+              handleAddBoard={handleAddBoard}
+              selectedBoard={selectedBoard}
+              newTask={newTask}
+              handleChangeTask={handleChangeTask}
+              handleSaveTask={handleSaveTask}
+            />
+          </>
+        )
       ) : (
-        <div className="flex-1 p-0 flex items-center justify-center bg-gray-50">
+        <div className="flex-1 p-0 flex items-center justify-center bg-black/30">
           {isRegistering ? (
             <RegisterForm
               onRegisterSuccess={handleRegisterSuccess}

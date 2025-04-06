@@ -176,7 +176,7 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
   const tabs = [
     {
       id: "profile",
-      label: "Tabla",
+      label: "Tareas creadas",
       content: (
         <TasksTable
           tasks={filteredTasks} // Pasar las tareas filtradas
@@ -187,7 +187,7 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
     },
     {
       id: "assigned",
-      label: "Mis Tareas Asignadas",
+      label: "Tareas por hacer",
       content: (
         <TasksTable
           tasks={filteredAssignedTasks} // Pasar las tareas asignadas filtradas
@@ -426,7 +426,7 @@ const Tabs = ({ defaultTabId = "profile", workspaceId }) => {
   };
 
   return (
-    <div className="mb-4 border-gray-200 dark:border-gray-700">
+    <div className="mb-4 border-gray-200  dark:border-gray-700">
       <ul
         className="flex flex-wrap -mb-px text-sm font-medium text-center"
         id="default-styled-tab"

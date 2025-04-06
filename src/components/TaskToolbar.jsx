@@ -4,7 +4,7 @@ import { useState } from "react";
 const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssign, onSearch }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [emailInput, setEmailInput] = useState("");
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para el término de búsqueda
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleAddTask = () => {
     setIsModalOpen(true);
@@ -36,7 +36,7 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
     const term = e.target.value;
     setSearchTerm(term);
     if (onSearch) {
-      onSearch(term); // Notificar al componente padre del cambio en el término de búsqueda
+      onSearch(term);
     }
   };
 
@@ -60,11 +60,11 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
   };
 
   return (
-    <div className="flex items-center space-x-4 p-2 bg-gray-50 border-b border-gray-200">
+    <div className="flex items-center space-x-4 p-2 bg-gray-900 border-b border-gray-600">
       {/* Botón "Agregar tarea" */}
       <button
         onClick={handleAddTask}
-        className="bg-purple-700 text-white font-semibold py-2 px-4 rounded-md hover:bg-purple-800 transition-colors"
+        className="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors shadow-lg"
       >
         Agregar tarea
       </button>
@@ -76,10 +76,10 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
           placeholder="Buscar"
           value={searchTerm}
           onChange={handleSearchChange}
-          className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="pl-10 pr-4 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white placeholder-gray-400"
         />
         <svg
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -97,7 +97,11 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
       {/* Botón "Editar" */}
       <button
         onClick={handleEdit}
-        className="text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+        className={`font-semibold py-2 px-4 border border-gray-600 rounded-md transition-colors ${
+          selectedTaskIds.length !== 1
+            ? "bg-gray-700 text-gray-400 opacity-50 cursor-not-allowed"
+            : "bg-gray-700 text-white hover:bg-gray-600"
+        }`}
         disabled={selectedTaskIds.length !== 1}
       >
         Editar
@@ -106,17 +110,25 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
       {/* Botón "Eliminar" */}
       <button
         onClick={handleDelete}
-        className="text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+        className={`font-semibold py-2 px-4 border border-gray-600 rounded-md transition-colors ${
+          selectedTaskIds.length === 0
+            ? "bg-gray-700 text-gray-400 opacity-50 cursor-not-allowed"
+            : "bg-gray-700 text-white hover:bg-gray-600"
+        }`}
         disabled={selectedTaskIds.length === 0}
       >
         Eliminar
       </button>
-    
+
       {/* Botón "Asignar responsable" */}
       <div className="relative">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+          className={`font-semibold py-2 px-4 border border-gray-600 rounded-md transition-colors ${
+            selectedTaskIds.length === 0
+              ? "bg-gray-700 text-gray-400 opacity-50 cursor-not-allowed"
+              : "bg-gray-700 text-white hover:bg-gray-600"
+          }`}
           disabled={selectedTaskIds.length === 0}
         >
           Asignar Responsable
@@ -124,8 +136,8 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
 
         {/* Dropdown para ingresar el correo */}
         {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-80 bg-black rounded-md shadow-lg p-4 z-10">
-            <label htmlFor="emailInput" className="text-sm ml-2 text-white">
+          <div className="absolute right-0 mt-2 w-80 bg-gray-800 rounded-md shadow-lg p-4 z-10 border border-gray-600">
+            <label htmlFor="emailInput" className="text-sm ml-2 text-gray-300">
               Escribe el correo del responsable
             </label>
             <input
@@ -133,20 +145,20 @@ const TaskToolbar = ({ setIsModalOpen, selectedTaskIds, onDelete, onEdit, onAssi
               id="emailInput"
               value={emailInput}
               onChange={handleEmailChange}
-              className="ml-2 mt-1 border-b-2 text-white border-gray-300 focus:outline-none focus:border-purple-600 transition duration-200 p-2 w-60"
+              className="ml-2 mt-1 border-b-2 text-white border-gray-600 bg-gray-700 focus:outline-none focus:border-purple-600 transition duration-200 p-2 w-60"
               placeholder="Correo del responsable"
             />
             <div className="flex justify-end space-x-2 mt-3">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="text-white hover:bg-purple-700 transition-colors mt-1 border p-1 rounded-md"
+                className="text-white hover:bg-gray-700 transition-colors mt-1 border border-gray-600 p-1 rounded-md"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAssign}
-                className="text-white hover:bg-purple-800 transition-colors mt-1 border p-1 rounded-md"
+                className="text-white hover:bg-purple-700 transition-colors mt-1 border border-purple-600 p-1 rounded-md"
               >
                 Asignar Responsable
               </button>
@@ -164,7 +176,7 @@ TaskToolbar.propTypes = {
   onDelete: PropTypes.func,
   onEdit: PropTypes.func,
   onAssign: PropTypes.func,
-  onSearch: PropTypes.func, // Nueva prop para manejar la búsqueda
+  onSearch: PropTypes.func,
 };
 
 export default TaskToolbar;
